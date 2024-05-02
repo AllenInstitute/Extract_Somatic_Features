@@ -1,0 +1,12 @@
+meshparty>=1.0.0
+pandas
+vtk
+caveclient
+imageryclient==1.0.3
+zmesh
+multiprocess
+scikit-learn
+tifffile
+task-queue
+gcsfs
+scipy
