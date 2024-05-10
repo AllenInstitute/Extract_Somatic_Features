@@ -38,3 +38,27 @@ To extract the persomatic features from a single cell, run the following script.
 ```
 python ./scripts/run_local_cell.py
 ```
+
+### Parallelization
+
+To parallelize the jobs we use TaskQueue and Amazon SQS. An example script can be found below. Note that you will need to set up  your own queue to feed in to the task worker command:
+```
+python ./scripts/run_local_tq.py
+```
+
+## Running feature extraction on kubernetes
+
+To run feature extraction on the entire MICrONS dataset, we used multiple nodes on kubernetes. Running all the jobs inside separate docker containers. The script for this setup is under:
+```
+./scripts/soma_nuc_task.yaml
+```
+Note that pipeline specific arguments like DOCKER_CONTAINER and SQS_QUEUE are written in all caps and will need to be changed accordingly.
+
+## Other resources
+### To see how these features have been used, please check out the accompanying manuscript:
+- Perisomatic Ultrastructure Efficiently Classifies Cells in Mouse Cortex [(Elabbady 2022)](https://www.biorxiv.org/content/10.1101/2022.07.20.499976v2)
+
+### To see how these features have enabled scientific discovery, please check out the following papers:
+- Cell-type-specific inhibitory circuitry from a connectomic census of mouse visual cortex [(Schneider-Mizell 2023)](https://biorxiv.org/content/10.1101/2023.01.23.525290v3)
+- The Synaptic Architecture of Layer 5 Thick Tufted Excitatory Neurons in the Visual Cortex of Mice [(Bodor 2023)](https://www.biorxiv.org/content/10.1101/2023.10.18.562531v1)
+- Integrating EM and Patch-seq data: Synaptic connectivity and target specificity of predicted Sst transcriptomic types [(Gamlin 2023)](https://www.biorxiv.org/content/10.1101/2023.03.22.533857v1)
