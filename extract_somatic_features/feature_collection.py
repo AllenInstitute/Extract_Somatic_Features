@@ -27,8 +27,13 @@ def get_mesh_features(mesh_id, mesh,
         radius = np.array([15000 / 4, 15000 / 4, 15000 / 40], dtype=np.int32)
         ctr_pt_vx = ctr_pt_nm  / voxel_resolution
         bbox = np.array([ctr_pt_vx - radius, ctr_pt_vx + radius], dtype=np.int32)
-        syn_df = caveclient.materialize.synapse_query(post_ids=mesh_id, bounding_box=bbox,
-                                                      materialization_version=mat_version)
+        #MICrONS public flat segmentation 661 does not have a synapse table at that version - query up to date table
+        if mat_version == 661:
+            syn_df = caveclient.materialize.synapse_query(post_ids=mesh_id, bounding_box=bbox)
+        #Otherwise specify mat_version
+        else:
+            syn_df = caveclient.materialize.synapse_query(post_ids=mesh_id, bounding_box=bbox,
+                                                        materialization_version=mat_version)
         print('Synapse Table output')
         print(syn_df.shape)
         syn_dict = get_soma_syn_dict(mesh, syn_df)
