@@ -80,3 +80,55 @@ def write_feat_json(cell_info,
 
 
     print('%d features updated'%(nuc_id))
+
+
+@queueable
+def write_local_json(cell_info,
+                  nuc_seg_source,
+                  out_path,
+                  voxel_resolution,
+                  fixmesh_input,
+                  dataset_name = '',
+                  mat_version = None):
+    """for each cell will collection the soma and nucleus reature dictionary and save it as a 
+    json to the specified local folder
+    """
+    
+    nuc_id = cell_info[0]
+    soma_id = cell_info[1]
+    
+    print(f'Starting Cell {soma_id}')
+    mat_version = mat_version
+    client = CAVEclient(dataset_name)
+    mesh_dict, soma_mesh = get_feat_dict(cell_info,
+                nuc_seg_source = nuc_seg_source,
+                voxel_resolution= voxel_resolution,
+                fixmesh_input = fixmesh_input,
+                caveclient = client,
+                mat_version = mat_version,
+                get_nucleus = True,
+                return_mesh = True)
+
+    #Ensure proper encoding
+    class json_serialize(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, np.integer):
+                return int(obj)
+            if isinstance(obj, np.floating):
+                return float(obj)
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return json.JSONEncoder.default(self, obj)
+        
+
+    # Saving the features as a json       
+    cell_json = json.dumps(mesh_dict, cls=json_serialize)
+
+    jsonfilename = '%d_%d.json'%(nuc_id, soma_id)
+    json_filepath = os.path.join(out_path, jsonfilename)
+
+    with open(json_filepath, 'w') as f:
+        json.dump(cell_json, f, ensure_ascii=False, indent=4)
+
+
+    print('%d features updated'%(nuc_id))

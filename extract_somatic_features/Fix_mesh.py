@@ -11,21 +11,6 @@ import os
 import tifffile as tif
 import zmesh
 
-# example_input={
-#     "seg_path" : "https://storage.googleapis.com/neuroglancer/basil_v0/basil_full/seg-aug",
-#     "disk_cache_path" : "basil_meshes",
-#     "mip_level": 4,
-#     "cutout_radius":15
-# }
-
-# parallel_example_input={
-#     "output_folder": "./meshes/filled_fixed_nuclei",
-#     "source_df": "/Users/leilae/Neural_coding/data/NUCLEI.pkl",
-#     "id_column":"nucleus_id",
-#     "pool_size": 3,
-#     "soma_column": None,
-# }
-
 
 def make_linear_transfer(black_val,opaque_val,color=[1,0,0],alpha_max=1.0):
     tf = []
@@ -67,12 +52,12 @@ def get_fixed_seg_mask(seg_id,
     y_radius_pix = int((radius_nm/voxel_resolution[1]))
     z_radius_pix = int(radius_nm/voxel_resolution[2])
    
-    print(radius_nm,mip, x_radius_pix)
+    #print(radius_nm,mip, x_radius_pix)
     print('Got bounding boxes')
     #if cutout exceeds volume, resets given axis to volume boundaries   
     mins = np.array(center_vx)-[x_radius_pix,y_radius_pix,z_radius_pix]
     maxs = np.array(center_vx)+[x_radius_pix,y_radius_pix,z_radius_pix]
-    print(mins,maxs)
+    #print(mins,maxs)
     seg_ids = [seg_id]
     if len(merge_seg_ids) > 0:
         seg_ids += merge_seg_ids
@@ -86,7 +71,7 @@ def get_fixed_seg_mask(seg_id,
             )
     print('created cv object')
     bbox = cv.Bbox(mins, maxs,dtype=np.int32)
-    print(bbox)
+    #print(bbox)
     seg_cutout = seg_cv.download(
                                 bbox,
                                 segids=seg_ids,
@@ -95,9 +80,9 @@ def get_fixed_seg_mask(seg_id,
                                 coord_resolution=voxel_resolution)
     print('Got seg cutout')
     seg_cutout = np.array(seg_cutout)
-    print(seg_cutout.shape)
+    #print(seg_cutout.shape)
     seg_cutout = np.squeeze(seg_cutout)
-    print('squeezed cutout')
+    #print('squeezed cutout')
     seg_cutout = np.squeeze(seg_cutout)
     print('squeezed cutout')
     frac_zero = np.count_nonzero(seg_cutout==0)/seg_cutout.size

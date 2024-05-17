@@ -69,10 +69,6 @@ def is_clipped(mesh, buffer=3000):
     clipped = False
     v = mesh.vertices
     bb = calc_bb(v)
-
-    #BASIL Volume boundaries in NANOMETERS :  
-    #[[ 100000.,   80000.,    5600.], MIN
-    # [ 660000., 1000000.,   37600.]] MAX
     
     if (min(bb[:,0]) <= (100000 + buffer) or max(bb[:,0]) >= (660000 - buffer)):
         clipped = True
@@ -171,7 +167,7 @@ def get_soma_syn_dict(mesh, syn_df):
         syn_pos = np.vstack(syn_df.ctr_pt_position) * [4, 4, 40]
         ds, syn_soma_pt = mesh.kdtree.query(syn_pos, k=1)
         soma_syn_df = syn_df[ds < 150]
-        syn_dict["n_soma_syn"] = soma_syn_df.shape[0]
+        syn_dict["n_soma_syn"] = int(soma_syn_df.shape[0])
         syn_dict["soma_syn_density"] = soma_syn_df.shape[0] / mesh.area
     else:
         syn_dict["n_soma_syn"] = 0
