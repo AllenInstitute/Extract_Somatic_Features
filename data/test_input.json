@@ -1,10 +1,10 @@
 {
-    "dataset":"minnie65_public_v661",
+    "dataset":"minnie65_public",
     "materialization_version": 661,
     "voxel_resolution":[4,4,40],
     "nuc_seg_source" : "precomputed://https://bossdb-open-data.s3.amazonaws.com/iarpa_microns/minnie/minnie65/nuclei",
     "nucleus_table":"nucleus_detection_lookup_v1",
-    "output_filepath": "../data",
+    "output_filepath": "../data/",
     "google_bucket": "",
     "gcsfs_project":"",
     "token_file":"",
