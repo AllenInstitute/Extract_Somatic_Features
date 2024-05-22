@@ -22,7 +22,7 @@ def get_mesh_features(mesh_id, mesh,
         mesh_dict['soma_center_mass'] = list(mesh.center_mass)
         mesh_dict['soma_volume_nm'] = mesh.volume
         mesh_dict['soma_area_nm'] = mesh.area
-        mesh_dict['soma_area_to_volume'] = area_to_volume(mesh)\
+        mesh_dict['soma_area_to_volume'] = area_to_volume(mesh)
         
         radius = np.array([15000 / 4, 15000 / 4, 15000 / 40], dtype=np.int32)
         ctr_pt_vx = ctr_pt_nm  / voxel_resolution
