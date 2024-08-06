@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: CLUSTER_NAME
+  name: CLUSTER_NAME
+spec:
+  replicas: 45
+  selector:
+    matchLabels:
+      run: CLUSTER_NAME
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 100%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        run: CLUSTER_NAME
+    spec:
+      containers:
+        - image: lelabbady/soma_extraction:v16
+          name: CLUSTER_NAME
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh"]
+          args:
+            [
+              "-c",
+              "while true; do python -u task_worker.py 'SQS_QUEUE' 3600; done",
+            ]
+          env:
+            - name: CLOUDSDK_CORE_PROJECT
+              value: ${CLOUDSDK_CORE_PROJECT}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "SECRETS_FILE_PATH"
+            - name: BUMP
+              value: "test2"
+            - name: GCSFS_TOKEN
+              value: "TOKEN_FILE_PATH"
+          resources:
+            requests:
+              cpu: 2000m
+              memory: 9200Mi
+          volumeMounts:
+            - name: cloudvolume
+              mountPath: CLOUDVOLUME_PATH
+              readOnly: true
+            - name: google
+              mountPath: GCLOUD_PATH
+              readOnly: true
+      dnsPolicy: Default
+      volumes:
+        - name: secrets0
+          secret:
+            secretName: secrets1
+        - name: google
+          secret:
+            secretName: google
+        - name: soma-features

@@ -50,9 +50,9 @@ python ./scripts/run_local_tq.py
 
 To run feature extraction on the entire MICrONS dataset, we used multiple nodes on kubernetes. Running all the jobs inside separate docker containers. The script for this setup is under:
 ```
-./scripts/soma_nuc_task.yaml
+./scripts/run_kubernetes_job.yaml
 ```
-Note that pipeline specific arguments like DOCKER_CONTAINER and SQS_QUEUE are written in all caps and will need to be changed accordingly.
+Note that pipeline specific arguments like CONTAINER_NAME, SQS_QUEUE, and SECRETS_FILE are written in all caps and will need to be changed accordingly.
 
 ## Other resources
 ### To see how these features have been used, please check out the accompanying manuscript:
