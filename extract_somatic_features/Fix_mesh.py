@@ -12,7 +12,20 @@ import tifffile as tif
 import zmesh
 
 
-def make_linear_transfer(black_val,opaque_val,color=[1,0,0],alpha_max=1.0):
+
+def make_linear_transfer(black_val, opaque_val, color=[1,0,0], alpha_max=1.0):
+    """
+    Creates a linear transfer function for volume rendering.
+
+    Parameters:
+    - black_val (float): The value at which the transfer function starts to become opaque.
+    - opaque_val (float): The value at which the transfer function becomes fully opaque.
+    - color (list, optional): The color of the transfer function. Defaults to [1, 0, 0] (red).
+    - alpha_max (float, optional): The maximum opacity value. Defaults to 1.0.
+
+    Returns:
+    - tf (list): The linear transfer function as a list of control points, where each control point is a list of [value, red, green, blue, alpha].
+    """
     tf = []
     tf.append([-40,color[0],color[1],color[2],0])
     tf.append([black_val,color[0],color[1],color[2],0])
@@ -32,8 +45,24 @@ def get_fixed_seg_mask(seg_id,
                        ctr_pt_nm = None,
                        vertical_dilation_pix = 5,
                        get_og_mask = False):
-    ''' For a given seg ID, gets a bounding box based on the cutout_radius and adjusts the segmentation
-    to fill holes and keeps the largest connected component. Returns a mask of this fixed segmentation.'''
+
+    """
+    Retrieves the fixed segmentation mask for a given segment ID.
+    Args:
+        seg_id (int): The segment ID.
+        cvpath (str): The path to the CloudVolume.
+        cache_path (str): The path to the disk cache.
+        mip (int): The desired resolution level.
+        imageclient: The image client object.
+        cutout_radius (float): The radius of the cutout in micrometers.
+        voxel_resolution (list, optional): The voxel resolution in nanometers. Defaults to [4,4,40].
+        merge_seg_ids (list, optional): Additional segment IDs to merge. Defaults to [].
+        ctr_pt_nm (numpy.ndarray, optional): The center point in nanometers. Defaults to None.
+        vertical_dilation_pix (int, optional): The number of pixels for vertical dilation. Defaults to 5.
+        get_og_mask (bool, optional): Whether to get the original mask. Defaults to False.
+    Returns:
+        tuple: A tuple containing the fixed segmentation mask, the center point in nanometers, the radius in nanometers, and the fraction of zero values in the mask.
+    """
 
     print('Getting Fixed Mesh')
     if ctr_pt_nm is None:
@@ -114,7 +143,17 @@ def get_fixed_seg_mask(seg_id,
 
 
 def get_trimesh_from_segmask(seg_mask, og_cm, cutout_radius, mip, imageclient):
-    ''' Uses zmesh to create and return a mesh based on the given segmentation mask'''
+    """
+    Generate a trimesh object from a segmentation mask.
+    Parameters:
+    - seg_mask (ndarray): The segmentation mask.
+    - og_cm (ndarray): The original center of mass.
+    - cutout_radius (float): The radius of the cutout.
+    - mip (int): The MIP level.
+    - imageclient (ImageClient): The image client.
+    Returns:
+    - new_mesh (trimesh.Mesh): The generated trimesh object.
+    """
     
     mip_resolution = imageclient.segmentation_cv.mip_resolution(mip)
     print('THIS IS YOUR MIP RESOLUTION: ' + str(mip_resolution))
@@ -138,10 +177,22 @@ def get_trimesh_from_segmask(seg_mask, og_cm, cutout_radius, mip, imageclient):
     
     return new_mesh
 
-def fix_mesh_row(dfrow, fix_mesh, folder, id_column,
-                 ctr_pt_column = None,
-                 soma_column=None):
-    ''' Fixes a mesh with the assumption that the cell information is stored in a row of a dataframe.'''
+
+def fix_mesh_row(dfrow, fix_mesh, folder, id_column, ctr_pt_column=None, soma_column=None):
+    """
+    Fix the mesh for a given row in a DataFrame and saves the fixed mesh as an h5 file.
+    Parameters:
+    - dfrow (tuple): A tuple containing the index and the row of the DataFrame.
+    - fix_mesh (object): An object representing the mesh fixer.
+    - folder (str): The path to the folder containing the mesh files.
+    - id_column (str): The name of the column containing the mesh IDs.
+    - ctr_pt_column (str, optional): The name of the column containing the center point coordinates. Defaults to None.
+    - soma_column (str, optional): The name of the column containing the soma IDs. Defaults to None.
+    Returns:
+    - None
+    Raises:
+    - None
+    """
     (ind,dfrow)=dfrow
     mesh_id = dfrow[id_column]
     obj_path = os.path.join(folder, "%s.obj"%mesh_id)
@@ -186,7 +237,19 @@ class FixMesh():
             self.seg_path = client.info.segmentation_source()
         
 
-    def fix(self, mesh_id, merge_seg_ids = [], ctr_pt_nm = None):
+    def fix(self, mesh_id, merge_seg_ids=[], ctr_pt_nm=None):
+        """
+        Fixes the given mesh by applying segmentation mask and returns the fixed mesh.
+
+        Parameters:
+        - mesh_id (str): The ID of the mesh to be fixed.
+        - merge_seg_ids (list, optional): List of segment IDs to be merged. Default is an empty list.
+        - ctr_pt_nm (None or tuple, optional): Center point coordinates in nanometers. Default is None.
+
+        Returns:
+        - new_mesh (trimesh.Trimesh): The fixed mesh.
+        - frac_zero (float): Fraction of zero values in the segmentation mask.
+        """
         seg_mask, og_cm, radius_nm, frac_zero = get_fixed_seg_mask(mesh_id,
                                                         self.seg_path,
                                                         self.disk_cache_path,
@@ -202,13 +265,18 @@ class FixMesh():
         return new_mesh, frac_zero
 
 
-    def parallel_fix_from_df(self, df,
-                             id_column='nucleus_id',
-                             soma_column=None,
-                             output_folder='.',
-                             ctr_pt_column = None,
-                             pool_size=4):
-        ''' To fix cells from a dataframe'''
+    def parallel_fix_from_df(self, df, id_column='nucleus_id', soma_column=None, output_folder='.', ctr_pt_column=None, pool_size=4):
+        """
+        Perform parallel fixing of mesh based on the given DataFrame.
+
+        Args:
+            df (pandas.DataFrame): The DataFrame containing the data.
+            id_column (str, optional): The column name for the nucleus ID. Defaults to 'nucleus_id'.
+            soma_column (str, optional): The column name for the soma data. Defaults to None.
+            output_folder (str, optional): The output folder path. Defaults to '.'.
+            ctr_pt_column (str, optional): The column name for the center point data. Defaults to None.
+            pool_size (int, optional): The number of processes to use for parallelization. Defaults to 4.
+        """
 
         my_partial = partial(fix_mesh_row,
                              fix_mesh = self,
@@ -219,11 +287,20 @@ class FixMesh():
         with Pool(pool_size) as p:
             p.map(my_partial,df.iterrows())
     
-    def get_binary_mask(self,mesh_id, 
-                        soma_id = None, 
-                        ctr_pt_nm = None,
-                        output_folder='.',
-                        get_og_mask = False):
+    def get_binary_mask(self, mesh_id, soma_id=None, ctr_pt_nm=None, output_folder='.', get_og_mask=False):
+        """
+        Generates a binary mask for a given mesh ID.
+        Parameters:
+            mesh_id (int): The ID of the mesh.
+            soma_id (int, optional): The ID of the soma. Defaults to None.
+            ctr_pt_nm (float, optional): The center point in nanometers. Defaults to None.
+            output_folder (str, optional): The output folder path. Defaults to '.'.
+            get_og_mask (bool, optional): Flag to get the original mask. Defaults to False.
+        Returns:
+            numpy.ndarray: The generated binary mask.
+        Raises:
+            None
+        """
 
         filename = '%d_binarymask_mip%d_cutout%d.tiff'%(mesh_id,self.mip_level,self.cutout_radius)
         filename = os.path.join(output_folder,filename)

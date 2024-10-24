@@ -9,9 +9,15 @@ from scipy.ndimage import morphology
 
 
 def grab_seg_dict(neuroglancer_url, layer='seg-aug'):
-    """Takes in a neuroglancer url and the name of the desired segmentation layer. 
-    Returns a dictionary of that seg layer with an added variable of number of seg meshes 
     """
+    Retrieves the segmentation dictionary from a Neuroglancer URL.
+    Parameters:
+    - neuroglancer_url (str): The Neuroglancer URL containing the JSON data.
+    - layer (str): The layer name to extract the segmentation dictionary from. Default is 'seg-aug'.
+    Returns:
+    - layer_dict (dict): The segmentation dictionary extracted from the specified layer.
+    """
+ 
     json_url = neuroglancer_url.split('json_url=')[1]
     print(json_url)
 
@@ -24,22 +30,42 @@ def grab_seg_dict(neuroglancer_url, layer='seg-aug'):
 
 
 def avg_radius(mesh):
-    """for a given mesh will return the average euclidean distance
-    from the mesh.center_mass
+    """
+    Calculate the average radius of a mesh.
+    Parameters:
+    - mesh: A mesh object representing the 3D geometry.
+    Returns:
+    - The average radius of the mesh.
     """
     v = mesh.vertices
     
     return np.mean(np.linalg.norm(v - mesh.center_mass, axis=1))
 
 def area_to_volume(mesh):
+    """
+    Calculates the ratio of surface area to volume for a given mesh.
+
+    Parameters:
+    - mesh: The mesh object for which to calculate the ratio.
+
+    Returns:
+    - The ratio of surface area to volume.
+    """
     v = mesh.volume
     a_over_v = mesh.area/v
     radius = np.cbrt((v/((4/3)*np.pi)))
     return (a_over_v)*(radius/3)
 
 def calc_bb(vertices):
-    """For a given set of vertices, will return an 8x3 array with the 
-    bounding box corner coordinates
+    """
+    Calculates the bounding box corner coordinates for a given set of vertices.
+
+    Parameters:
+    vertices (numpy.ndarray): An array of shape (N, 3) representing the vertices.
+
+    Returns:
+    numpy.ndarray: An array of shape (8, 3) containing the bounding box corner coordinates.
+
     """
     aligned_axes = np.array([[min(vertices[:,0]),min(vertices[:,1]),min(vertices[:,2])],
                              [max(vertices[:,0]),max(vertices[:,1]),max(vertices[:,2])]]) 
@@ -48,24 +74,41 @@ def calc_bb(vertices):
     return bb
 
 def remove_small_components(mesh, size_thresh=200):
-    """Takes in a mesh and returns a new mesh with components  
-    smaller than a given threshold removed. 
+    """
+    This function takes in a mesh and removes components smaller than a given threshold. 
+
+    Parameters:
+    - mesh: The input mesh.
+    - size_thresh: The threshold size for removing components. Default is 200.
+
+    Returns:
+    - new_mesh: The new mesh with small components removed.
     """
     mesh_filters.filter_components_by_size(mesh, min_size=size_thresh)
     return mesh.apply_mask(mesh)
 
 
 def get_largest_components(mesh):
-    """Takes in a mesh and returns a new mesh with solely the largest connected component. 
-    Meant to clean up small segmentations within the larger mesh
+    """
+    This function is meant to remove small segmentations within the larger mesh and clean up the mesh data.
+    Parameters:
+    - mesh: The input mesh.
+    Returns:
+    - new_mesh: The new mesh with only the largest connected component.
     """
     is_big = mesh_filters.filter_largest_component(mesh)
     return mesh.apply_mask(is_big)
 
 def is_clipped(mesh, buffer=3000):
-    """Takes in a mesh and returns a boolean for whether the mesh if cut
-    off by the volume boundaries, it accounts for a given buffer with a default of 3 microns
     """
+    Check if a mesh is clipped based on its bounding box coordinates.
+    Parameters:
+    - mesh: The mesh object to check.
+    - buffer: The buffer value to add to the bounding box coordinates.
+    Returns:
+    - clipped: A boolean value indicating whether the mesh is clipped or not.
+    """
+
     clipped = False
     v = mesh.vertices
     bb = calc_bb(v)
@@ -81,10 +124,16 @@ def is_clipped(mesh, buffer=3000):
     
 
 def surrounding_soma(mesh, mesh_id, cv, cutout_size=10):
-    """Takes in a mesh, its ID and a cloudvolume object. 
-    Volume cutout size can be altered depending on CV mip size. Default 10 for mip size of 6.
-    Returns ID for the segmentation most surrounding the given mesh (assumed soma)
     """
+    Parameters:
+    - mesh (ndarray): The mesh data.
+    - mesh_id (int): The ID of the mesh.
+    - cv (ndarray): The cutout volume.
+    - cutout_size (int): The size of the cutout volume.
+    Returns:
+    - int: The most common value surrounding the specified mesh ID - assigned soma ID
+    """
+
     mesh_cm_vx = np.floor(mesh.center_mass/cv.resolution)
 
     cutout_vol = cv[int(mesh_cm_vx[0]-cutout_size):mesh_cm_vx[0]+cutout_size,
@@ -98,10 +147,17 @@ def surrounding_soma(mesh, mesh_id, cv, cutout_size=10):
     return vals[np.argmax(counts)]
 
 def principal_orientation(vertices, up):
-    """Takes in mesh vertices, and a given unit vector for "UP" in the volume.
-    e.g Basil's UP unit vecotor: [0.95707235 0.14327179 0.22568398]
-    Returns the dot product of the vertices first component and the UP vector
     """
+    Calculate the principal orientation of a set of vertices. 
+
+    Parameters:
+    - vertices (array-like): The vertices to calculate the principal orientation for.
+    - up (array-like): The up vector to compare the principal orientation against.
+
+    Returns:
+    - float: The absolute dot product between the unit first component of the principal components and the up vector.
+    """
+
     pca = PCA(n_components=3)
     pca.fit(vertices)
     components = pca.components_
@@ -109,8 +165,15 @@ def principal_orientation(vertices, up):
     return np.absolute(np.dot(unit_first,up))
 
 def aspect_ratio(vertices):
-    """Takes in mesh vertices and returns a measure of how spherical
-    the object is. 1 = perfect sphere, 1> more elliptical
+    """
+    Calculate the aspect ratio of a set of vertices as a measure of how spherical
+    the object is. 1 = perfect sphere, 1> more elliptical.
+
+    Parameters:
+    - vertices (array-like): The vertices of the object.
+
+    Returns:
+    - float: The aspect ratio of the object.
     """
     pca = PCA(n_components=3)
     pca.fit(vertices)
@@ -118,16 +181,33 @@ def aspect_ratio(vertices):
     return variance_v[0]/(sum(variance_v[1:])/2)
 
 def avg_nuc_to_soma_dist(soma_mesh, nuc_mesh):
+    """
+    Calculate the average and standard deviation of the distance between the soma and each nucleus.
+
+    Parameters:
+    - soma_mesh (Mesh): The mesh representing the soma.
+    - nuc_mesh (Mesh): The mesh representing the nuclei.
+
+    Returns:
+    - tuple: A tuple containing the average and standard deviation of the distances.
+    """
     nv = nuc_mesh.vertices[::100,:]
     nearest = soma_mesh.kdtree.query(nv)
     return np.mean(nearest[0]), np.std(nearest[0])
 
-def shrink_wrap_nucleus(mesh,
-                        initial_radius = 12000,
-                        initial_theta_resolution=256,
-                        n_iters = 2,
-                        max_feature_size = 1000,
-                        final_detail=300):
+def shrink_wrap_nucleus(mesh, initial_radius=12000, initial_theta_resolution=256, n_iters=2, max_feature_size=1000, final_detail=300):
+    """
+    Shrink wraps a given mesh to a nucleus shape.
+    Args:
+        mesh (trimesh_io.Mesh): The input mesh to be shrink wrapped.
+        initial_radius (float): The initial radius of the nucleus shape. Default is 12000.
+        initial_theta_resolution (int): The initial theta resolution of the nucleus shape. Default is 256.
+        n_iters (int): The number of iterations for the shrink wrapping process. Default is 2.
+        max_feature_size (int): The maximum feature size for subdivision during the shrink wrapping process. Default is 1000.
+        final_detail (int): The final detail of the shrink wrapped mesh. Default is 300.
+    Returns:
+        trimesh_io.Mesh: The shrink wrapped mesh.
+    """
 
     mesh.vertices = mesh.vertices-np.mean(mesh.vertices, axis=0)
     sphereSource = vtk.vtkSphereSource()

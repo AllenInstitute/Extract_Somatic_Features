@@ -9,8 +9,18 @@ def get_mesh_features(mesh_id, mesh,
                       ctr_pt_nm = [], 
                       voxel_resolution = [4,4,40],
                       soma=False):
-    """Returns a dictionary with geometric mesh features. If the mesh is a soma, 
-    synapse features will also be added to the dictionary.
+    """
+    Returns a dictionary with geometric mesh features. If the mesh is a soma, 
+    Parameters:
+    - mesh_id (int): The ID of the mesh.
+    - mesh (Mesh): The geometric mesh object.
+    - caveclient (optional): The caveclient object used for querying synapse data. Default is None.
+    - mat_version (optional): The materialization version for querying synapse data. Default is None.
+    - ctr_pt_nm (list): The coordinates of the center point in nanometers. Default is an empty list.
+    - voxel_resolution (list): The voxel resolution in nanometers. Default is [4, 4, 40].
+    - soma (bool): Indicates whether the mesh is a soma. Default is False.
+    Returns:
+    - mesh_dict (dict): A dictionary containing the geometric mesh features.
     """
     mesh_dict = {}
 
@@ -58,8 +68,15 @@ def get_mesh_features(mesh_id, mesh,
     return mesh_dict
 
 def get_soma_nuc_features(mesh_dict):
-    """updates and returns an input dictionary with features that depend on precomputed
-    nucleus and soma features
+    """
+    Updates and returns an input dictionary with features that depend on precomputed
+    nucleus and soma features.
+
+    Parameters:
+    - mesh_dict (dict): A dictionary containing mesh information.
+
+    Returns:
+    - mesh_dict (dict): The updated dictionary with additional features.
     """
     p0 = np.array(mesh_dict['nucleus_center_mass'])
     p1 = np.array(mesh_dict['soma_center_mass'])
@@ -73,8 +90,26 @@ def get_soma_nuc_features(mesh_dict):
 def get_fold_features(mesh_id, mesh, 
                       mesh_dict=None,
                       threshold = 150):
-    """updates and returns a dictionary with nucleus fold features. This includes shrink wrapping the 
-    input mesh and quantifying the vertices within vs outside the threshold distance.
+    """
+    Updates and returns a dictionary with nucleus fold features.
+
+    Parameters:
+    - mesh_id (int): The ID of the mesh.
+    - mesh (trimesh.base.Trimesh): The input mesh.
+    - mesh_dict (dict, optional): The dictionary to update with the fold features. If not provided, a new dictionary will be created.
+    - threshold (float, optional): The threshold distance for determining whether a vertex is inside or outside the fold.
+
+    Returns:
+    - mesh_dict (dict): The updated dictionary with the following fold features:
+        - 'nucleus_id' (int): The ID of the nucleus.
+        - 'fold_area_nm' (float): The area of the folded region in nanometers.
+        - 'fract_fold' (float): The fraction of the mesh area that is folded.
+        - 'avg_fold_depth' (float): The average depth of the folded vertices.
+
+    This function updates the provided dictionary (or creates a new one if not provided) with the fold features of the input mesh. 
+    It first performs shrink wrapping on the mesh to create a new mesh. Then, it quantifies the vertices within vs outside the threshold 
+    distance to determine the folded region. The fold features include the area of the folded region, 
+    the fraction of the mesh area that is folded, and the average depth of the folded vertices.
     """
     new_mesh = shrink_wrap_nucleus(mesh)
 
@@ -98,16 +133,22 @@ def get_fold_features(mesh_id, mesh,
     return mesh_dict
 
 
-def get_feat_dict(cell_info,
-                  nuc_seg_source,
-                  voxel_resolution,
-                  fixmesh_input,
-                  caveclient = None,
-                  mat_version = None,
-                  get_nucleus = True,
-                  return_mesh = False):
-    """For a given ID, collects the soma features, nucleus features, and joint features and 
-    returns the compiled feature dictionary.
+def get_feat_dict(cell_info, nuc_seg_source, voxel_resolution, fixmesh_input, caveclient=None, mat_version=None, get_nucleus=True, return_mesh=False):
+    """
+    For a given ID, collects the soma features, nucleus features, and joint features and returns the compiled feature dictionary.
+    Parameters:
+    - cell_info (tuple): A tuple containing the cell information, including the nucleus ID, soma ID, and center point coordinates.
+    - nuc_seg_source (str): The source of the nucleus segmentation.
+    - voxel_resolution (float): The voxel resolution.
+    - fixmesh_input (str): The input for fixing the mesh.
+    - caveclient (optional): The caveclient object. Defaults to None.
+    - mat_version (optional): The version of the material. Defaults to None.
+    - get_nucleus (bool): Flag indicating whether to get nucleus features. Defaults to True.
+    - return_mesh (bool): Flag indicating whether to return the soma mesh. Defaults to False.
+    Returns:
+    - dict: The compiled feature dictionary.
+    Note:
+    - This function assumes the existence of the following helper functions: load_fixed_mesh(), get_mesh_features(), load_mesh(), and get_soma_nuc_features().
     """
     
     nuc_id = cell_info[0]
