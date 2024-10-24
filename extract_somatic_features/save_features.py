@@ -11,19 +11,25 @@ from caveclient import CAVEclient
 
 
 @queueable
-def write_feat_json(cell_info,
-                  nuc_seg_source,
-                  gcloud_filepath,
-                  voxel_resolution,
-                  fixmesh_input,
-                  dataset_name = '',
-                  mat_version = None,
-                  update = False,
-                  token_file=None):
-    """for each cell will collection the soma and nucleus reature dictionary and save it as a 
-    json to the specified google bucket folder
+def write_feat_json(cell_info,nuc_seg_source,gcloud_filepath,voxel_resolution,fixmesh_input,dataset_name = '',mat_version = None,update = False,token_file=None):
     """
-    
+    Writes the features of a cell to a JSON file.
+    Args:
+        cell_info (tuple): A tuple containing the nucleus ID and soma ID of the cell.
+        nuc_seg_source (str): The source of the nucleus segmentation.
+        gcloud_filepath (str): The path to the Google Cloud Storage directory where the JSON file will be saved.
+        voxel_resolution (float): The voxel resolution of the cell.
+        fixmesh_input (str): The input for fixing the mesh.
+        dataset_name (str, optional): The name of the dataset. Defaults to an empty string.
+        mat_version (str, optional): The version of the mat file. Defaults to None.
+        update (bool, optional): Whether to update an existing JSON file. Defaults to False.
+        token_file (str, optional): The path to the token file. Defaults to None.
+    Raises:
+        AssertionError: If update is True and the JSON file does not exist.
+    Returns:
+        None
+    """
+  
     nuc_id = cell_info[0]
     soma_id = cell_info[1]
     
@@ -83,16 +89,23 @@ def write_feat_json(cell_info,
 
 
 @queueable
-def write_local_json(cell_info,
-                  nuc_seg_source,
-                  out_path,
-                  voxel_resolution,
-                  fixmesh_input,
-                  dataset_name = '',
-                  mat_version = None):
-    """for each cell will collection the soma and nucleus reature dictionary and save it as a 
-    json to the specified local folder
+def write_local_json(cell_info, nuc_seg_source, out_path, voxel_resolution, fixmesh_input, dataset_name='', mat_version=None):
     """
+    Write the features of a cell as a JSON file.
+    Parameters:
+    - cell_info (tuple): A tuple containing the nucleus ID and soma ID of the cell.
+    - nuc_seg_source (str): The source of the nucleus segmentation.
+    - out_path (str): The path to save the JSON file.
+    - voxel_resolution (float): The voxel resolution.
+    - fixmesh_input (str): The input for fixing the mesh.
+    - dataset_name (str, optional): The name of the dataset. Defaults to an empty string.
+    - mat_version (str, optional): The version of the mat file. Defaults to None.
+    Returns:
+    - None
+    Raises:
+    - None
+    """
+    
     
     nuc_id = cell_info[0]
     soma_id = cell_info[1]
